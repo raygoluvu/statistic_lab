@@ -1,0 +1,109 @@
+---
+title: "lab5_report"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+#install.packages("BSDA")
+library(BSDA)
+library(dplyr)
+```
+
+第一題(2、4、6組)：種族的不同對於平均成績是否有差異。(ex：group A vs other groups ...)
+透過檢定分析出各種可能狀況，並解釋為何有此現象。
+
+1.找出各種族中平均分數最高跟最低(選兩群)
+2.往外延伸(學歷高低的比例是否有差異)
+3.H0: μ1=μ2, H1: μ1!=μ2(GA:GE)
+```{r}
+ga = test %>% select((everything())) %>% filter(race.ethnicity == 'group A')
+gb = test %>% select((everything())) %>% filter(race.ethnicity == 'group B')
+gc = test %>% select((everything())) %>% filter(race.ethnicity == 'group C')
+gd = test %>% select((everything())) %>% filter(race.ethnicity == 'group D')
+ge = test %>% select((everything())) %>% filter(race.ethnicity == 'group E')
+mean(ga$avg)
+mean(gb$avg)
+mean(gc$avg)
+mean(gd$avg)
+mean(ge$avg)
+
+```
+
+
+```{r}
+#比較A、E組成績平均
+#H0: μ1=μ2, 
+#H1: μ1!=μ2
+z.test(x = ga$avg, 
+       y = ge$avg, 
+       alternative = "two.sided", 
+       sigma.x = sd(ga$avg), 
+       sigma.y = sd(ge$avg), 
+       conf.level = 0.95)
+#p-value = 6.769e-07, alpha = 0.05落在拒絕域內拒絕H0, A、E組成績有顯著差異
+```
+
+```{r}
+#比較兩組父母高學歷的比例是否有顯著差異
+#H0: P1=P2, H1: P1!=P2
+ga_high = ga %>% select((everything())) %>% filter((parental.level.of.education == "associate's degree" | parental.level.of.education == "bachelor's degree" | parental.level.of.education == "master's degree" | parental.level.of.education == "some college"))
+
+gb_high = gb %>% select((everything())) %>% filter((parental.level.of.education == "associate's degree" | parental.level.of.education == "bachelor's degree" | parental.level.of.education == "master's degree"| parental.level.of.education == "some college"))
+
+p1 = length(ga_high$avg)
+p2 = length(gb_high$avg)
+
+n1 = length(ga$avg)
+n2 = length(gb$avg)
+
+p <- c(p1, p2) 
+n <- c(n1, n2) 
+
+prop.test(p, n, alternative = "two.sided", 
+          conf.level = 0.95)
+#p-value = 0.8632(>0.05)
+#兩組父母高學歷的比例無顯著差異
+```
+
+
+```{r}
+#比較兩組午餐減免比例是否有差異
+#H0: P1=P2, Ha: P1!=P2
+ga_stand = ga %>% select((everything())) %>% filter(lunch == "standard")
+gb_stand = gb %>% select((everything())) %>% filter(lunch == "standard")
+
+ga_stand_p1 = length(ga_stand$lunch)
+gb_stand_p2 = length(gb_stand$lunch)
+
+p_stand <- c(ga_stand_p1, gb_stand_p2) 
+
+prop.test(p_stand, n, alternative = "two.sided", 
+          conf.level = 0.95)
+#p-value = 0.5949(>0.05)
+#兩組午餐減免比例無顯著差異
+```
+```{r}
+#考前準備課程完成比例是否有差異
+#H0: P1=P2, Ha: P1!=P2
+ga_pcourse = ga %>% select((everything())) %>% filter(test.preparation.course == "completed")
+gb_pcourse = ga %>% select((everything())) %>% filter(test.preparation.course == "completed")
+
+ga_pcourse_p = length(ga_pcourse$test.preparation.course)
+gb_pcourse_p = length(gb_pcourse$test.preparation.course)
+
+pcourse = c(ga_pcourse_p, gb_pcourse_p)
+
+prop.test(pcourse, n, alternative = "two.sided", 
+          conf.level = 0.95)
+#p-value = 0.0009237(<0.05)
+#拒絕H0，兩組準備課程完成比例有顯著差異
+```
+
+
+
+
+
+
